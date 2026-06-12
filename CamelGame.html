@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🐪 Desert Dash</title>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ───────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --sand:    #f0c060;
+  --dusk:    #e87c3e;
+  --sky1:    #ffb347;
+  --sky2:    #ff7043;
+  --dark:    #3b1f0a;
+  --cream:   #fef3c7;
+  --green:   #2d7a3a;
+  --water:   #38b2d8;
+  --ui-bg:   rgba(59,31,10,0.88);
+  --accent:  #ffd166;
+}
+
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--dark);
+  color:var(--cream);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  overflow:hidden;
+  user-select:none;
+}
+
+/* ── HEADER ──────────────────────────────────────── */
+header{
+  width:100%;max-width:860px;
+  padding:14px 20px 6px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.game-title{
+  font-family:'Rye',serif;
+  font-size:clamp(1.6rem,4vw,2.2rem);
+  color:var(--accent);
+  text-shadow:3px 3px 0 var(--dark),0 0 20px rgba(255,180,50,.4);
+  letter-spacing:2px;
+  white-space:nowrap;
+}
+
+/* ── HUD ─────────────────────────────────────────── */
+#hud{
+  display:flex;gap:8px;flex-wrap:wrap;
+  align-items:center;
+}
+
+.hud-card{
+  background:var(--ui-bg);
+  border:2px solid rgba(255,209,102,.25);
+  border-radius:14px;
+  padding:6px 14px;
+  text-align:center;
+  min-width:80px;
+}
+
+.hud-label{
+  font-size:.58rem;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  color:rgba(254,243,199,.5);
+  display:block;
+}
+
+.hud-value{
+  font-family:'Rye',serif;
+  font-size:1.15rem;
+  color:var(--accent);
+  display:block;
+  line-height:1.2;
+}
+
+/* ── STAMINA BAR ─────────────────────────────────── */
+#stamina-wrap{
+  background:var(--ui-bg);
+  border:2px solid rgba(255,209,102,.25);
+  border-radius:14px;
+  padding:6px 14px;
+  min-width:110px;
+}
+
+#stamina-track{
+  width:100%;height:8px;
+  background:rgba(255,255,255,.12);
+  border-radius:6px;
+  overflow:hidden;
+  margin-top:3px;
+}
+
+#stamina-fill{
+  height:100%;width:100%;
+  background:linear-gradient(90deg,#f97316,#fbbf24);
+  border-radius:6px;
+  transition:width .1s linear;
+}
+
+/* ── CANVAS WRAP ─────────────────────────────────── */
+#canvas-wrap{
+  width:100%;max-width:860px;
+  padding:0 12px 8px;
+  position:relative;
+}
+
+canvas{
+  width:100%;
+  border-radius:22px;
+  display:block;
+  box-shadow:0 20px 60px rgba(0,0,0,.7),
+             inset 0 1px 0 rgba(255,255,255,.1);
+  border:3px solid rgba(255,209,102,.2);
+  cursor:pointer;
+}
+
+/* ── OVERLAY SCREENS ─────────────────────────────── */
+.overlay{
+  position:absolute;
+  inset:0 12px 8px;
+  border-radius:22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  text-align:center;
+  padding:30px 20px;
+  background:rgba(20,8,0,.88);
+  backdrop-filter:blur(4px);
+  z-index:10;
+}
+
+.overlay.hidden{display:none;}
+
+.ov-title{
+  font-family:'Rye',serif;
+  font-size:clamp(1.8rem,5vw,2.8rem);
+  color:var(--accent);
+  text-shadow:0 0 30px rgba(255,180,50,.5);
+}
+
+.ov-sub{
+  font-size:.9rem;
+  opacity:.7;
+  max-width:320px;
+  line-height:1.7;
+}
+
+.score-table{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,209,102,.2);
+  border-radius:14px;
+  padding:14px 24px;
+  width:100%;max-width:280px;
+}
+
+.score-row{
+  display:flex;
+  justify-content:space-between;
+  padding:4px 0;
+  font-size:.9rem;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.score-row:last-child{border:none;}
+.score-row .lbl{opacity:.55;}
+.score-row .val{font-family:'Rye',serif;color:var(--accent);}
+
+/* ── BUTTONS ─────────────────────────────────────── */
+.big-btn{
+  padding:14px 44px;
+  border-radius:60px;
+  border:none;
+  font-family:'Rye',serif;
+  font-size:1.2rem;
+  cursor:pointer;
+  letter-spacing:1px;
+  transition:all .18s;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.big-btn.primary{background:linear-gradient(135deg,var(--dusk),#c0392b);color:var(--cream);}
+.big-btn.secondary{background:linear-gradient(135deg,var(--sand),var(--dusk));color:var(--dark);}
+.big-btn:hover{transform:translateY(-3px) scale(1.04);}
+.big-btn:active{transform:scale(.96);}
+
+/* ── BOTTOM CONTROLS ─────────────────────────────── */
+#bottom-bar{
+  display:flex;gap:12px;
+  padding:6px 20px 14px;
+  width:100%;max-width:860px;
+  justify-content:center;
+}
+
+.ctrl-btn{
+  padding:10px 24px;
+  border-radius:14px;
+  border:2px solid rgba(255,209,102,.2);
+  background:var(--ui-bg);
+  color:var(--cream);
+  font-family:'Rye',serif;
+  font-size:.95rem;
+  cursor:pointer;
+  transition:all .18s;
+}
+.ctrl-btn:hover{border-color:var(--accent);background:rgba(255,140,50,.15);}
+.ctrl-btn:active{transform:scale(.96);}
+
+/* ── HINT ────────────────────────────────────────── */
+#hint{
+  font-size:.72rem;
+  opacity:.45;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  padding-bottom:10px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 class="game-title">🐪 Desert Dash</h1>
+  <div id="hud">
+    <div class="hud-card">
+      <span class="hud-label">Score</span>
+      <span class="hud-value" id="h-score">0</span>
+    </div>
+    <div class="hud-card">
+      <span class="hud-label">Distance</span>
+      <span class="hud-value" id="h-dist">500m</span>
+    </div>
+    <div class="hud-card">
+      <span class="hud-label">Time</span>
+      <span class="hud-value" id="h-time">60s</span>
+    </div>
+    <div id="stamina-wrap">
+      <span class="hud-label">Stamina</span>
+      <div id="stamina-track"><div id="stamina-fill"></div></div>
+    </div>
+  </div>
+</header>
+
+<div id="canvas-wrap">
+  <canvas id="c" width="840" height="320"></canvas>
+
+  <!-- START SCREEN -->
+  <div class="overlay" id="start-screen">
+    <div style="font-size:3.5rem;animation:bounce 1s ease-in-out infinite alternate">🐪</div>
+    <div class="ov-title">Desert Dash</div>
+    <p class="ov-sub">Race your camel to the oasis before time runs out!<br>Avoid rocks & dunes. Sprint to go faster.</p>
+    <div class="ov-sub" style="font-size:.8rem;opacity:.5">
+      <strong>SPACE / CLICK</strong> — Jump &nbsp;|&nbsp; <strong>HOLD SHIFT / HOLD</strong> — Sprint
+    </div>
+    <button class="big-btn primary" id="start-btn">Begin Race</button>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div class="overlay hidden" id="go-screen">
+    <div id="go-emoji" style="font-size:3rem">🏜️</div>
+    <div class="ov-title" id="go-title">Time's Up!</div>
+    <div class="score-table">
+      <div class="score-row"><span class="lbl">Distance</span><span class="val" id="fs-dist">—</span></div>
+      <div class="score-row"><span class="lbl">Collisions</span><span class="val" id="fs-coll">—</span></div>
+      <div class="score-row"><span class="lbl">Time Bonus</span><span class="val" id="fs-time">—</span></div>
+      <div class="score-row"><span class="lbl">Final Score</span><span class="val" id="fs-score">—</span></div>
+    </div>
+    <button class="big-btn secondary" id="replay-btn">Race Again</button>
+  </div>
+</div>
+
+<div id="bottom-bar">
+  <button class="ctrl-btn" id="restart-ctrl" style="display:none">🔄 Restart</button>
+</div>
+<div id="hint">Space / Tap = Jump &nbsp;•&nbsp; Hold Shift / Long-press = Sprint</div>
+
+<style>
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+</style>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CANVAS SETUP
+═══════════════════════════════════════════════════ */
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+/* ═══════════════════════════════════════════════════
+   GAME CONSTANTS
+═══════════════════════════════════════════════════ */
+const GROUND_Y    = H - 70;       // ground line
+const TOTAL_DIST  = 3000;         // metres to oasis
+const GAME_TIME   = 60;           // seconds
+const BASE_SPEED  = 220;          // px/s base scroll
+const SPRINT_MULT = 1.7;
+const GRAVITY     = 1800;
+const JUMP_VEL    = -620;
+const CAMEL_X     = 120;          // fixed camel screen X
+const CAMEL_W     = 72, CAMEL_H = 64;
+
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+let state = 'start'; // start | playing | over
+let score=0, collisions=0;
+let timeLeft=GAME_TIME;
+let distLeft=TOTAL_DIST;
+let stamina=1, staminaDrain=false;
+let worldX=0;           // total world scroll (px)
+let lastTs=0;
+
+/* CAMEL */
+const cam = {
+  y: GROUND_Y - CAMEL_H,
+  vy: 0,
+  onGround: true,
+  jumping: false,
+  legPhase: 0,
+  hitFlash: 0,        // countdown seconds for hit flash
+  sprintPuff: 0,
+};
+
+/* INPUT */
+const keys  = { space:false, shift:false };
+let   touch = { jumping:false, sprinting:false, holdStart:0 };
+
+/* OBSTACLES */
+let obstacles = [];
+let nextObstDist = 0;   // world-px until next spawn
+
+/* PARALLAX LAYERS */
+const layers = [
+  { objs:[], speed:0.12, y:60,  size:[20,35],  count:8,  color:'#c2651a' },  // far dunes
+  { objs:[], speed:0.28, y:110, size:[15,28],  count:10, color:'#b85c15' },  // mid dunes
+  { objs:[], speed:0.55, y:145, size:[12,22],  count:7,  color:'#a0501a' },  // near dunes
+];
+
+/* PARTICLES */
+let particles = [];
+
+/* OASIS (drawn when near) */
+let oasisX = 0;   // screen X (calculated each frame)
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+function initGame(){
+  score=0; collisions=0; timeLeft=GAME_TIME; distLeft=TOTAL_DIST;
+  stamina=1; worldX=0; lastTs=0;
+  cam.y=GROUND_Y-CAMEL_H; cam.vy=0; cam.onGround=true;
+  cam.jumping=false; cam.legPhase=0; cam.hitFlash=0; cam.sprintPuff=0;
+  obstacles=[]; nextObstDist = 400 + Math.random()*300;
+  particles=[];
+  staminaDrain=false;
+
+  // Init parallax
+  layers.forEach((l,li)=>{
+    l.objs=[];
+    for(let i=0;i<l.count;i++){
+      l.objs.push({ x: Math.random()*W*3, h: l.size[0]+Math.random()*(l.size[1]-l.size[0]) });
+    }
+  });
+
+  updateHUD();
+  document.getElementById('restart-ctrl').style.display='inline';
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN LOOP
+═══════════════════════════════════════════════════ */
+function loop(ts){
+  requestAnimationFrame(loop);
+  if(state!=='playing') return;
+
+  if(!lastTs) lastTs=ts;
+  let dt = Math.min((ts-lastTs)/1000, .05);
+  lastTs=ts;
+
+  update(dt);
+  render();
+}
+
+/* ═══════════════════════════════════════════════════
+   UPDATE
+═══════════════════════════════════════════════════ */
+function update(dt){
+  /* ── Stamina ── */
+  const sprinting = (keys.shift || touch.sprinting) && cam.onGround;
+  if(sprinting && stamina>0){
+    stamina = Math.max(0, stamina - dt*0.28);
+    staminaDrain=true;
+  } else {
+    stamina = Math.min(1, stamina + dt*0.18);
+    staminaDrain=false;
+  }
+  const spd = BASE_SPEED * (sprinting&&stamina>0 ? SPRINT_MULT : 1);
+
+  /* ── Scroll & Distance ── */
+  const pxPerM = W / 200;  // 200 px = 1m roughly
+  const moved  = spd * dt;
+  worldX  += moved;
+  distLeft = Math.max(0, distLeft - moved/pxPerM*0.12);
+
+  /* ── Score ── */
+  score += Math.floor(moved * 0.08 * (sprinting?1.5:1));
+
+  /* ── Time ── */
+  timeLeft -= dt;
+  if(timeLeft<=0 && distLeft>0){ timeLeft=0; endGame(false); return; }
+
+  /* ── Jump ── */
+  if((keys.space || touch.jumping) && cam.onGround){
+    cam.vy = JUMP_VEL;
+    cam.onGround=false;
+    cam.jumping=true;
+    touch.jumping=false;
+    keys.space=false;
+    spawnDustBurst(CAMEL_X+20, GROUND_Y, 6);
+    playTone(200,.08,'square',.12);
+  }
+
+  /* ── Physics ── */
+  cam.vy += GRAVITY * dt;
+  cam.y  += cam.vy  * dt;
+  if(cam.y >= GROUND_Y - CAMEL_H){
+    cam.y = GROUND_Y - CAMEL_H;
+    cam.vy=0; cam.onGround=true; cam.jumping=false;
+  }
+
+  /* ── Leg animation ── */
+  cam.legPhase += dt * (sprinting ? 14 : 8);
+
+  /* ── Hit flash ── */
+  if(cam.hitFlash>0) cam.hitFlash-=dt;
+
+  /* ── Sprint puff ── */
+  if(sprinting && stamina>0){
+    cam.sprintPuff+=dt;
+    if(cam.sprintPuff>0.08){
+      spawnDustBurst(CAMEL_X-10, GROUND_Y, 3);
+      cam.sprintPuff=0;
+    }
+  }
+
+  /* ── Parallax layers ── */
+  layers.forEach(l=>{
+    l.objs.forEach(o=>{ o.x -= spd*l.speed*dt; if(o.x<-60) o.x=W+Math.random()*400; });
+  });
+
+  /* ── Obstacle spawn ── */
+  nextObstDist -= moved;
+  if(nextObstDist<=0 && distLeft>150){
+    spawnObstacle();
+    nextObstDist = 280 + Math.random()*320 - Math.min(200,(TOTAL_DIST-distLeft)*0.04);
+  }
+
+  /* ── Obstacles ── */
+  obstacles.forEach(o=>{
+    o.x -= spd*dt;
+  });
+  obstacles = obstacles.filter(o=>o.x > -80);
+
+  /* ── Collision ── */
+  if(cam.hitFlash<=0){
+    for(let o of obstacles){
+      if(collides(o)){
+        cam.hitFlash = 1.2;
+        collisions++;
+        timeLeft = Math.max(0, timeLeft-4);
+        score   = Math.max(0, score-50);
+        spawnDustBurst(o.x, o.y+o.h, 12);
+        playTone(120,.3,'sawtooth',.15);
+        break;
+      }
+    }
+  }
+
+  /* ── Particles ── */
+  particles.forEach(p=>{ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=400*dt; p.life-=dt; p.r=Math.max(0,p.r-dt*4); });
+  particles=particles.filter(p=>p.life>0);
+
+  /* ── Win check ── */
+  if(distLeft<=0){ endGame(true); return; }
+
+  updateHUD();
+}
+
+/* ═══════════════════════════════════════════════════
+   COLLISION
+═══════════════════════════════════════════════════ */
+function collides(o){
+  const cx=CAMEL_X+8, cy=cam.y+10, cw=CAMEL_W-16, ch=CAMEL_H-14;
+  return cx<o.x+o.w && cx+cw>o.x && cy<o.y+o.h && cy+ch>o.y;
+}
+
+/* ═══════════════════════════════════════════════════
+   OBSTACLE SPAWN
+═══════════════════════════════════════════════════ */
+function spawnObstacle(){
+  const type = Math.random()<0.55?'rock':'dune';
+  if(type==='rock'){
+    const sz=28+Math.random()*22;
+    obstacles.push({type:'rock',x:W+40,y:GROUND_Y-sz,w:sz,h:sz});
+  } else {
+    const w=60+Math.random()*60, h=30+Math.random()*30;
+    obstacles.push({type:'dune',x:W+40,y:GROUND_Y-h,w,h});
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   PARTICLES
+═══════════════════════════════════════════════════ */
+function spawnDustBurst(x,y,n){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI;
+    const v=40+Math.random()*80;
+    particles.push({x,y,vx:Math.cos(a)*v*(Math.random()<.5?1:-1),vy:-Math.random()*120,r:3+Math.random()*4,life:.5+Math.random()*.4,color:`hsla(${30+Math.random()*20},70%,60%,`});
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════ */
+function render(){
+  ctx.clearRect(0,0,W,H);
+
+  drawSky();
+  drawSun();
+  drawParallaxDunes();
+  drawGround();
+  drawOasis();
+  drawObstacles();
+  drawParticles();
+  drawCamel();
+  drawProgressBar();
+  drawHeatShimmer();
+}
+
+/* Sky gradient */
+function drawSky(){
+  const g=ctx.createLinearGradient(0,0,0,GROUND_Y);
+  g.addColorStop(0,'#ff6a2f');
+  g.addColorStop(.45,'#ffb347');
+  g.addColorStop(1,'#ffd580');
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,W,GROUND_Y);
+}
+
+/* Sun */
+function drawSun(){
+  const sx=W*0.82, sy=55;
+  // glow
+  const sg=ctx.createRadialGradient(sx,sy,10,sx,sy,65);
+  sg.addColorStop(0,'rgba(255,240,120,.55)');
+  sg.addColorStop(1,'rgba(255,180,60,0)');
+  ctx.fillStyle=sg;
+  ctx.beginPath(); ctx.arc(sx,sy,65,0,Math.PI*2); ctx.fill();
+  // disk
+  ctx.fillStyle='#ffe566';
+  ctx.beginPath(); ctx.arc(sx,sy,26,0,Math.PI*2); ctx.fill();
+}
+
+/* Parallax dunes */
+function drawParallaxDunes(){
+  layers.forEach((l,li)=>{
+    l.objs.forEach(o=>{
+      const g=ctx.createRadialGradient(o.x,l.y,0,o.x,l.y,o.h*2.5);
+      g.addColorStop(0,l.color);
+      g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.ellipse(o.x,l.y,o.h*1.8,o.h,0,0,Math.PI*2);
+      ctx.fill();
+    });
+  });
+}
+
+/* Ground */
+function drawGround(){
+  // main sand
+  const g=ctx.createLinearGradient(0,GROUND_Y,0,H);
+  g.addColorStop(0,'#e8a535');
+  g.addColorStop(.4,'#c47e1a');
+  g.addColorStop(1,'#8b5e0a');
+  ctx.fillStyle=g;
+  ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+
+  // ripple lines
+  ctx.strokeStyle='rgba(255,220,100,.18)';
+  ctx.lineWidth=1.5;
+  for(let i=0;i<5;i++){
+    const ry=GROUND_Y+8+i*9;
+    const offset=(worldX*0.4+i*120)%W;
+    ctx.beginPath();
+    for(let x=0;x<W+20;x+=40){
+      const wx=(x-offset+W)%W;
+      ctx.moveTo(wx,ry); ctx.lineTo(wx+22,ry);
+    }
+    ctx.stroke();
+  }
+}
+
+/* Oasis */
+function drawOasis(){
+  // screenX: how far away the oasis is
+  const metersAway = distLeft;
+  const pxAway     = metersAway * (W/200) / 0.12;
+  oasisX            = CAMEL_X + pxAway * 0.015; // scaled visual approach
+  // simpler: just place oasis at right edge when close
+  const ox = W - 60 + (distLeft/TOTAL_DIST)*(W*6);
+
+  if(ox>W+200) return; // not visible yet
+
+  // Water pool
+  const wg=ctx.createRadialGradient(ox,GROUND_Y+18,4,ox,GROUND_Y+18,55);
+  wg.addColorStop(0,'#7ae8ff');
+  wg.addColorStop(.5,'#38b2d8');
+  wg.addColorStop(1,'rgba(30,150,200,0)');
+  ctx.fillStyle=wg;
+  ctx.beginPath(); ctx.ellipse(ox,GROUND_Y+14,55,18,0,0,Math.PI*2); ctx.fill();
+
+  // shimmer on water
+  ctx.strokeStyle='rgba(255,255,255,.4)';
+  ctx.lineWidth=1.5;
+  for(let i=0;i<3;i++){
+    const wx=ox-20+i*20+Math.sin(Date.now()/400+i)*5;
+    ctx.beginPath(); ctx.moveTo(wx,GROUND_Y+10); ctx.lineTo(wx+12,GROUND_Y+10); ctx.stroke();
+  }
+
+  // Palm trees (2)
+  [-32,32].forEach((dx,ti)=>{
+    const px=ox+dx, py=GROUND_Y-2;
+    // trunk
+    ctx.strokeStyle='#6b3c10'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.quadraticCurveTo(px+(ti===0?-8:8),py-35,px+(ti===0?-4:4),py-65); ctx.stroke();
+    // fronds
+    const tx=px+(ti===0?-4:4), ty=py-65;
+    const fronds=[[0,-20],[20,-10],[28,5],[-20,-10],[-28,5],[10,18],[-10,18]];
+    ctx.strokeStyle='#2d7a3a'; ctx.lineWidth=4;
+    fronds.forEach(([fx,fy])=>{
+      ctx.beginPath(); ctx.moveTo(tx,ty);
+      ctx.quadraticCurveTo(tx+fx*.6,ty+fy*.3,tx+fx,ty+fy);
+      ctx.stroke();
+    });
+    // coconuts
+    ctx.fillStyle='#8b4513';
+    ctx.beginPath(); ctx.arc(tx+4,ty+8,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(tx-5,ty+12,4,0,Math.PI*2); ctx.fill();
+  });
+
+  // "OASIS" sign if very close
+  if(distLeft<200){
+    ctx.font='bold 13px Nunito';
+    ctx.fillStyle='#fff';
+    ctx.textAlign='center';
+    ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=4;
+    ctx.fillText('🌴 OASIS', ox, GROUND_Y-80);
+    ctx.shadowBlur=0;
+  }
+}
+
+/* Obstacles */
+function drawObstacles(){
+  obstacles.forEach(o=>{
+    if(o.type==='rock'){
+      // Rock shape
+      const g=ctx.createRadialGradient(o.x+o.w*.35,o.y+o.h*.3,2,o.x+o.w/2,o.y+o.h/2,o.w*.7);
+      g.addColorStop(0,'#c8b89a');
+      g.addColorStop(1,'#7a6850');
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.moveTo(o.x+o.w*.1,o.y+o.h);
+      ctx.quadraticCurveTo(o.x-5,o.y+o.h*.6,o.x+o.w*.2,o.y+o.h*.1);
+      ctx.quadraticCurveTo(o.x+o.w*.5,o.y-8,o.x+o.w*.85,o.y+o.h*.15);
+      ctx.quadraticCurveTo(o.x+o.w+5,o.y+o.h*.55,o.x+o.w*.9,o.y+o.h);
+      ctx.closePath(); ctx.fill();
+      // crack
+      ctx.strokeStyle='rgba(80,55,30,.4)'; ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.moveTo(o.x+o.w*.45,o.y+o.h*.15);
+      ctx.lineTo(o.x+o.w*.38,o.y+o.h*.55);
+      ctx.lineTo(o.x+o.w*.52,o.y+o.h*.8);
+      ctx.stroke();
+    } else {
+      // Dune
+      const g=ctx.createLinearGradient(o.x,o.y,o.x,o.y+o.h);
+      g.addColorStop(0,'#d4a04a');
+      g.addColorStop(1,'#a0701a');
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.moveTo(o.x-20,o.y+o.h);
+      ctx.quadraticCurveTo(o.x+o.w*.3,o.y,o.x+o.w*.5,o.y+5);
+      ctx.quadraticCurveTo(o.x+o.w*.7,o.y+o.h*.3,o.x+o.w+20,o.y+o.h);
+      ctx.closePath(); ctx.fill();
+      // shadow side
+      ctx.fillStyle='rgba(80,40,0,.2)';
+      ctx.beginPath();
+      ctx.moveTo(o.x+o.w*.5,o.y+5);
+      ctx.quadraticCurveTo(o.x+o.w*.65,o.y+o.h*.25,o.x+o.w+20,o.y+o.h);
+      ctx.lineTo(o.x+o.w*.5,o.y+o.h);
+      ctx.closePath(); ctx.fill();
+    }
+  });
+}
+
+/* Particles */
+function drawParticles(){
+  particles.forEach(p=>{
+    ctx.fillStyle=p.color+p.life.toFixed(2)+')';
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+  });
+}
+
+/* ── CAMEL (drawn with canvas paths) ────────────── */
+function drawCamel(){
+  const x=CAMEL_X, y=cam.y;
+  const flash = cam.hitFlash>0 && Math.floor(cam.hitFlash*10)%2===0;
+
+  ctx.save();
+  if(flash){ ctx.filter='brightness(2) saturate(0)'; }
+
+  const t=cam.legPhase;
+  const bodyCol='#c8884a';
+  const darkCol='#8b5a2b';
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,.2)';
+  ctx.beginPath();
+  ctx.ellipse(x+CAMEL_W/2, GROUND_Y+4, CAMEL_W*.55, 7, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // Legs (4 legs, alternating pairs)
+  const legY=y+CAMEL_H-4;
+  const legPairs=[
+    {bx:x+18, swing:Math.sin(t)*14},
+    {bx:x+48, swing:Math.sin(t+Math.PI)*14},
+    {bx:x+28, swing:Math.sin(t+Math.PI/2)*12},
+    {bx:x+38, swing:Math.sin(t+Math.PI*1.5)*12},
+  ];
+  ctx.strokeStyle=darkCol; ctx.lineWidth=7; ctx.lineCap='round';
+  legPairs.forEach(l=>{
+    const footY=Math.min(GROUND_Y-2, legY+16+Math.abs(l.swing)*.3);
+    ctx.beginPath();
+    ctx.moveTo(l.bx,legY);
+    ctx.lineTo(l.bx+l.swing*.5, legY+12);
+    ctx.lineTo(l.bx+l.swing, footY);
+    ctx.stroke();
+  });
+
+  // Body
+  ctx.fillStyle=bodyCol;
+  ctx.beginPath();
+  ctx.ellipse(x+CAMEL_W/2, y+CAMEL_H*.62, CAMEL_W*.48, CAMEL_H*.3, -0.08, 0, Math.PI*2);
+  ctx.fill();
+
+  // Hump
+  ctx.fillStyle=bodyCol;
+  ctx.beginPath();
+  ctx.moveTo(x+22, y+CAMEL_H*.42);
+  ctx.quadraticCurveTo(x+36, y+2, x+50, y+CAMEL_H*.42);
+  ctx.closePath(); ctx.fill();
+
+  // Neck
+  ctx.fillStyle=bodyCol;
+  ctx.beginPath();
+  ctx.moveTo(x+CAMEL_W-14, y+CAMEL_H*.38);
+  ctx.quadraticCurveTo(x+CAMEL_W+2, y+CAMEL_H*.15, x+CAMEL_W+8, y+CAMEL_H*.32);
+  ctx.quadraticCurveTo(x+CAMEL_W+6, y+CAMEL_H*.42, x+CAMEL_W-10, y+CAMEL_H*.5);
+  ctx.closePath(); ctx.fill();
+
+  // Head
+  ctx.fillStyle=bodyCol;
+  ctx.beginPath();
+  ctx.ellipse(x+CAMEL_W+10, y+CAMEL_H*.26, 16, 12, 0.25, 0, Math.PI*2);
+  ctx.fill();
+
+  // Snout
+  ctx.fillStyle='#b8784a';
+  ctx.beginPath();
+  ctx.ellipse(x+CAMEL_W+22, y+CAMEL_H*.3, 9, 6, 0.3, 0, Math.PI*2);
+  ctx.fill();
+
+  // Eye
+  ctx.fillStyle='#2c1205';
+  ctx.beginPath();
+  ctx.arc(x+CAMEL_W+14, y+CAMEL_H*.19, 2.5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath();
+  ctx.arc(x+CAMEL_W+15, y+CAMEL_H*.18, 1, 0, Math.PI*2);
+  ctx.fill();
+
+  // Nostril
+  ctx.fillStyle='#8b4513';
+  ctx.beginPath();
+  ctx.ellipse(x+CAMEL_W+24, y+CAMEL_H*.27, 2.5, 1.5, 0.3, 0, Math.PI*2);
+  ctx.fill();
+
+  // Ear
+  ctx.fillStyle=bodyCol;
+  ctx.beginPath();
+  ctx.moveTo(x+CAMEL_W+8, y+CAMEL_H*.12);
+  ctx.lineTo(x+CAMEL_W+5, y+CAMEL_H*.01);
+  ctx.lineTo(x+CAMEL_W+13, y+CAMEL_H*.08);
+  ctx.closePath(); ctx.fill();
+
+  // Tail
+  ctx.strokeStyle=darkCol; ctx.lineWidth=4; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(x+6, y+CAMEL_H*.55);
+  ctx.quadraticCurveTo(x-8, y+CAMEL_H*.4+Math.sin(t)*.5, x-4, y+CAMEL_H*.28);
+  ctx.stroke();
+
+  // Sprint smoke
+  if(staminaDrain){
+    ctx.fillStyle='rgba(240,200,120,.5)';
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.arc(x-10-i*10, y+CAMEL_H*.5+Math.sin(t+i)*6, 5+i*3, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+/* Progress bar */
+function drawProgressBar(){
+  const pw=W-40, ph=10, px=20, py=H-18;
+  // track
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.beginPath(); ctx.roundRect(px,py,pw,ph,5); ctx.fill();
+  // fill
+  const prog=1-distLeft/TOTAL_DIST;
+  const g=ctx.createLinearGradient(px,0,px+pw,0);
+  g.addColorStop(0,'#ff8c00'); g.addColorStop(1,'#ffd700');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.roundRect(px,py,pw*prog,ph,5); ctx.fill();
+  // camel dot
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(px+pw*prog,py+ph/2,6,0,Math.PI*2); ctx.fill();
+  // oasis flag
+  ctx.font='14px serif';
+  ctx.fillText('🌴',px+pw-6,py+ph+2);
+  ctx.fillText('🐪',px-8,py+ph+2);
+}
+
+/* Heat shimmer overlay */
+function drawHeatShimmer(){
+  const t=Date.now()/800;
+  ctx.fillStyle='rgba(255,200,100,.015)';
+  for(let i=0;i<4;i++){
+    const sx=((t*60+i*200)%W);
+    ctx.beginPath();
+    ctx.moveTo(sx,GROUND_Y-20);
+    ctx.lineTo(sx+8,GROUND_Y);
+    ctx.lineTo(sx-8,GROUND_Y);
+    ctx.closePath(); ctx.fill();
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   HUD
+═══════════════════════════════════════════════════ */
+function updateHUD(){
+  document.getElementById('h-score').textContent=score;
+  document.getElementById('h-dist').textContent=Math.ceil(distLeft)+'m';
+  document.getElementById('h-time').textContent=Math.ceil(Math.max(0,timeLeft))+'s';
+  document.getElementById('stamina-fill').style.width=(stamina*100)+'%';
+
+  // timer urgency
+  const tv=document.getElementById('h-time');
+  tv.style.color=timeLeft<10?'#ff4444':timeLeft<20?'#ff9944':'var(--accent)';
+}
+
+/* ═══════════════════════════════════════════════════
+   END GAME
+═══════════════════════════════════════════════════ */
+function endGame(won){
+  state='over';
+  const timeBonus=won?Math.floor(timeLeft*8):0;
+  const collPenalty=collisions*50;
+  const final=Math.max(0,score+timeBonus-collPenalty);
+
+  document.getElementById('go-emoji').textContent=won?'🌴':'🏜️';
+  document.getElementById('go-title').textContent=won?'Oasis Reached! 🎉':"Time's Up!";
+  document.getElementById('fs-dist').textContent=Math.ceil(TOTAL_DIST-distLeft)+'m';
+  document.getElementById('fs-coll').textContent=collisions+' (-'+(collisions*50)+')';
+  document.getElementById('fs-time').textContent=won?'+'+timeBonus:'0';
+  document.getElementById('fs-score').textContent=final;
+  score=final;
+
+  document.getElementById('go-screen').classList.remove('hidden');
+
+  if(won){
+    playTone(523,.1,'sine',.15);
+    setTimeout(()=>playTone(659,.1,'sine',.15),100);
+    setTimeout(()=>playTone(784,.1,'sine',.15),200);
+    setTimeout(()=>playTone(1047,.25,'sine',.18),300);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   AUDIO
+═══════════════════════════════════════════════════ */
+let actx;
+function ensureAudio(){ if(!actx) actx=new(window.AudioContext||window.webkitAudioContext)(); }
+function playTone(freq,dur,type='sine',vol=.1){
+  try{
+    ensureAudio();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+
+/* ═══════════════════════════════════════════════════
+   INPUT
+═══════════════════════════════════════════════════ */
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.key===' '){ e.preventDefault(); if(state==='playing') keys.space=true; }
+  if(e.code==='ShiftLeft'||e.code==='ShiftRight') keys.shift=true;
+});
+document.addEventListener('keyup',e=>{
+  if(e.code==='Space'||e.key===' ') keys.space=false;
+  if(e.code==='ShiftLeft'||e.code==='ShiftRight') keys.shift=false;
+});
+
+// Touch / click
+canvas.addEventListener('pointerdown',e=>{
+  ensureAudio();
+  if(state!=='playing') return;
+  e.preventDefault();
+  touch.holdStart=Date.now();
+  touch.jumping=true;
+  touch.sprinting=false;
+  // hold detection
+  touch._holdTimer=setTimeout(()=>{ touch.sprinting=true; touch.jumping=false; },180);
+});
+
+canvas.addEventListener('pointerup',e=>{
+  clearTimeout(touch._holdTimer);
+  touch.sprinting=false;
+});
+
+canvas.addEventListener('pointermove',e=>{ /* no-op */ });
+
+/* ═══════════════════════════════════════════════════
+   BUTTON WIRING
+═══════════════════════════════════════════════════ */
+document.getElementById('start-btn').onclick=()=>{
+  ensureAudio();
+  initGame();
+  state='playing';
+  document.getElementById('start-screen').classList.add('hidden');
+  lastTs=0;
+};
+
+document.getElementById('replay-btn').onclick=restart;
+document.getElementById('restart-ctrl').onclick=restart;
+
+function restart(){
+  ensureAudio();
+  initGame();
+  state='playing';
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('go-screen').classList.add('hidden');
+  lastTs=0;
+}
+
+/* ═══════════════════════════════════════════════════
+   IDLE RENDER (start/over screens)
+═══════════════════════════════════════════════════ */
+function idleRender(ts){
+  requestAnimationFrame(idleRender);
+  if(state==='playing') return;
+  // still render background for atmosphere
+  ctx.clearRect(0,0,W,H);
+  drawSky(); drawSun(); drawParallaxDunes(); drawGround();
+  // idle camel wobble
+  cam.legPhase+=0.04;
+  cam.y=GROUND_Y-CAMEL_H+Math.sin(ts/400)*2;
+  drawCamel();
+  drawProgressBar();
+}
+
+requestAnimationFrame(loop);
+requestAnimationFrame(idleRender);
+</script>
+</body>
+</html>
